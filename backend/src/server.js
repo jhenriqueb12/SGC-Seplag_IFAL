@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { pool } from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
-import contractRoutes from "./routes/contracts.routes.js";
+import contractRoutes from "./routes/contract.routes.js";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
