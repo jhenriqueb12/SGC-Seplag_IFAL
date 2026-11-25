@@ -13,7 +13,7 @@ import { formatDate, formatCurrency } from '../utils/contracts';
 
 export function MissingContract() {
   const { contracts } = useApp();
-  return <View style={s.missing}><Text style={s.title}>Contrato não encontrado</Text><Text style={s.subtitle}>Selecione um contrato na lista para continuar.</Text><Button label="Voltar aos contratos" variant="ghost" onPress={() => router.replace(`/contracts/${contracts[0].id}`)} /></View>;
+  return <View style={s.missing}><Text style={s.title}>Contrato não encontrado</Text><Text style={s.subtitle}>{contracts.length ? "Selecione um contrato na lista para continuar." : "Ainda não existem contratos cadastrados. Comece criando o primeiro registro."}</Text><Button label={contracts.length ? "Voltar aos contratos" : "Cadastrar primeiro contrato"} variant="ghost" onPress={() => router.replace(contracts[0] ? `/contracts/${contracts[0].id}` : "/contracts/new")} /></View>;
 }
 
 function Card({ label, children, icon, prominent, style }: { label: string; children: ReactNode; icon?: IconName; prominent?: boolean; style?: object }) {
