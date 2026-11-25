@@ -22,7 +22,6 @@ export function LoginScreen() {
   async function submit() {
     const message = validateLogin(email, password, sector);
     if (message) { setError(message); return; }
-    setPassword('');
     try {
       await login(email, password, sector);
       setPassword('');
@@ -30,9 +29,9 @@ export function LoginScreen() {
       setError(
         error instanceof Error
           ? error.message
-          : 'Não foi possível realizar o login.'
+          : 'Não foi possível entrar no sistema.'
       );
-    };
+    }
   }
   return <LinearGradient colors={['#0A1D3B', '#18345B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.root}>
     <StatusBar style="light" />
