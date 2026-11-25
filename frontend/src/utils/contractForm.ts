@@ -209,7 +209,7 @@ export function validateLogin(
   }
 
   if (!password.trim()) {
-    return 'Informe uma senha de demonstração.';
+    return 'Informe sua senha.';
   }
 
   if (!sector) {
