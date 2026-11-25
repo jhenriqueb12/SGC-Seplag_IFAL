@@ -48,13 +48,15 @@ type ContractHistoryResponse = {
 const AppContext = createContext<AppState | null>(null);
 
 function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .toUpperCase() || 'US';
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0] ?? '')
+      .join('')
+      .toUpperCase() || 'US'
+  );
 }
 
 function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
@@ -66,12 +68,14 @@ function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
     contractId: record.contractId,
     initials: getInitials(name),
     name,
-    action: field.toLowerCase() === 'cadastro'
-      ? 'criou este contrato'
-      : `alterou ${field.toLowerCase()}`,
-    detail: field.toLowerCase() === 'cadastro'
-      ? 'Registro inicial incluído no sistema.'
-      : `${field} atualizado.`,
+    action:
+      field.toLowerCase() === 'cadastro'
+        ? 'criou este contrato'
+        : `alterou ${field.toLowerCase()}`,
+    detail:
+      field.toLowerCase() === 'cadastro'
+        ? 'Registro inicial incluído no sistema.'
+        : `${field} atualizado.`,
     field,
     previousValue: record.previousValue ?? 'Não existente',
     currentValue: record.currentValue ?? '—',
@@ -98,23 +102,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   async function refreshContracts() {
     const contractsData = await getContracts();
 
-    // Cada contrato possui seu próprio endpoint de histórico.
+    // O backend disponibiliza o histórico por contrato, não em /api/audit.
     const histories = await Promise.all(
       contractsData.map((contract) =>
         getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>
       )
     );
 
+    const auditRecords = histories
+      .flat()
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )
+      .map(mapHistoryRecord);
+
     setContracts(contractsData);
-    setAudit(
-      histories
-        .flat()
-        .map(mapHistoryRecord)
-        .sort(
-          (a, b) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-        )
-    );
+    setAudit(auditRecords);
   }
 
   async function login(
@@ -180,7 +184,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? await updateContract(id, payload)
         : await createContract(payload);
 
-      // A lista e o histórico sempre refletem o que foi persistido no servidor.
       await refreshContracts();
 
       setToast(
