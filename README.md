@@ -66,7 +66,7 @@ npm install
 npm run dev
 ```
 
-A aplicação ficará disponível em `http://localhost:5173`.
+A aplicação ficará disponível em `http://localhost:8081`.
 
 ## Variáveis de ambiente
 
