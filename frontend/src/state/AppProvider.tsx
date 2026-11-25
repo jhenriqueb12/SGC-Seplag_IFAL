@@ -1,4 +1,3 @@
-
 import {
   createContext,
   useContext,
@@ -7,12 +6,21 @@ import {
   type ReactNode,
 } from 'react';
 
+import { loginRequest, logoutRequest } from '../services/auth';
+import {
+  createContract,
+  getContractHistory,
+  getContracts,
+  updateContract,
+} from '../services/contracts';
 import type {
   AuditRecord,
   Contract,
   ContractDraft,
   Session,
 } from '../types/contract';
+import { parseDate } from '../utils/contractForm';
+import { parseAmount } from '../utils/contracts';
 
 type AppState = {
   session: Session | null;
@@ -23,24 +31,58 @@ type AppState = {
   login: (email: string, password: string, sector: string) => Promise<void>;
   logout: () => void;
   save: (draft: ContractDraft, id?: string) => Promise<string>;
-  refresh: () => Promise<void>;
+  refreshContracts: () => Promise<void>;
 };
 
-type LoginResponse = {
-  token: string;
-  user: {
-    email: string;
-    sector: string;
-  };
+type ContractHistoryResponse = {
+  id: string;
+  contractId: string;
+  timestamp: string;
+  field: string;
+  previousValue: string | null;
+  currentValue: string | null;
+  name: string;
+  email?: string;
 };
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const AppContext = createContext<AppState | null>(null);
 
+function getInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] ?? '')
+    .join('')
+    .toUpperCase() || 'US';
+}
+
+function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
+  const name = record.name || 'Usuário não identificado';
+  const field = record.field || 'Informação do contrato';
+
+  return {
+    id: record.id,
+    contractId: record.contractId,
+    initials: getInitials(name),
+    name,
+    action: field.toLowerCase() === 'cadastro'
+      ? 'criou este contrato'
+      : `alterou ${field.toLowerCase()}`,
+    detail: field.toLowerCase() === 'cadastro'
+      ? 'Registro inicial incluído no sistema.'
+      : `${field} atualizado.`,
+    field,
+    previousValue: record.previousValue ?? 'Não existente',
+    currentValue: record.currentValue ?? '—',
+    source: 'Registro do banco de dados',
+    date: new Date(record.timestamp).toLocaleString('pt-BR'),
+    tone: field.toLowerCase() === 'cadastro' ? 'gray' : 'blue',
+  };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [audit, setAudit] = useState<AuditRecord[]>([]);
   const [toast, setToast] = useState('');
@@ -53,93 +95,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  function getApiUrl() {
-    if (!API_URL) {
-      throw new Error(
-        'URL da API não configurada. Defina EXPO_PUBLIC_API_URL.'
-      );
-    }
+  async function refreshContracts() {
+    const contractsData = await getContracts();
 
-    return API_URL.replace(/\/$/, '');
-  }
+    // Cada contrato possui seu próprio endpoint de histórico.
+    const histories = await Promise.all(
+      contractsData.map((contract) =>
+        getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>
+      )
+    );
 
-  async function request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-    authToken: string | null = token
-  ): Promise<T> {
-    const response = await fetch(`${getApiUrl()}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authToken
-          ? { Authorization: `Bearer ${authToken}` }
-          : {}),
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const message = await response.text();
-      throw new Error(message || `Erro na API: ${response.status}`);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
-  }
-
-  async function refresh(authToken: string | null = token) {
-    if (!authToken) return;
-
-    setLoading(true);
-
-    try {
-      const [contractsData, auditData] = await Promise.all([
-        request<Contract[]>('/api/contracts', {}, authToken),
-        request<AuditRecord[]>('/api/audit', {}, authToken),
-      ]);
-
-      setContracts(contractsData);
-      setAudit(auditData);
-    } finally {
-      setLoading(false);
-    }
+    setContracts(contractsData);
+    setAudit(
+      histories
+        .flat()
+        .map(mapHistoryRecord)
+        .sort(
+          (a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+    );
   }
 
   async function login(
     email: string,
     password: string,
     sector: string
-  ) {
+  ): Promise<void> {
     setLoading(true);
 
     try {
-      const response = await request<LoginResponse>(
-        '/api/auth/login',
-        {
-          method: 'POST',
-          body: JSON.stringify({ email, password, sector }),
-        },
-        null
+      const { session: authenticatedSession } = await loginRequest(
+        email.trim(),
+        password,
+        sector
       );
 
-      if (!response.token || !response.user) {
-        throw new Error('Resposta de autenticação inválida.');
-      }
-
-      setToken(response.token);
-      setSession({
-        email: response.user.email,
-        sector: response.user.sector,
-      });
-
-      await refresh(response.token);
+      setSession(authenticatedSession);
+      await refreshContracts();
       setToast('Login realizado com sucesso');
     } catch (error) {
-      setToken(null);
+      logoutRequest();
       setSession(null);
       setContracts([]);
       setAudit([]);
@@ -150,31 +146,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
+    logoutRequest();
     setSession(null);
-    setToken(null);
     setContracts([]);
     setAudit([]);
     setToast('');
   }
 
   async function save(draft: ContractDraft, id?: string): Promise<string> {
-    if (!token) {
-      throw new Error('Sessão expirada. Faça login novamente.');
+    const payload = {
+      title: draft.title.trim(),
+      process: draft.process.trim(),
+      modality: draft.modality,
+      description: draft.description.trim(),
+      startsAt: parseDate(draft.startsAt),
+      endsAt: parseDate(draft.endsAt),
+      amount: parseAmount(draft.amount),
+      unit: draft.unit,
+    };
+
+    if (!payload.startsAt || !payload.endsAt) {
+      throw new Error('Informe datas válidas para o contrato.');
+    }
+
+    if (payload.amount === null) {
+      throw new Error('Informe um valor válido para o contrato.');
     }
 
     setLoading(true);
 
     try {
-      const saved = await request<Contract>(
-        id ? `/api/contracts/${id}` : '/api/contracts',
-        {
-          method: id ? 'PUT' : 'POST',
-          body: JSON.stringify(draft),
-        }
-      );
+      const saved = id
+        ? await updateContract(id, payload)
+        : await createContract(payload);
 
-      // O backend é a fonte oficial dos dados e da auditoria.
-      await refresh(token);
+      // A lista e o histórico sempre refletem o que foi persistido no servidor.
+      await refreshContracts();
 
       setToast(
         id
@@ -202,7 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         save,
-        refresh: () => refresh(),
+        refreshContracts,
       }}
     >
       {children}
@@ -219,6 +226,3 @@ export function useApp() {
 
   return state;
 }
-
-
-
