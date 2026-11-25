@@ -52,7 +52,7 @@ export function LoginScreen() {
               <SelectField label="Setor" value={sector} options={sectors} placeholder="Selecione seu setor" onChange={setSector} />
               {!!error && <Text accessibilityRole="alert" style={s.error}>{error}</Text>}
               <Button label="Entrar" onPress={submit} style={s.submit} />
-              <Text style={s.demo}>Ambiente de demonstração. Use um e-mail fictício e qualquer senha.</Text>
+              <Text style={s.demo}>Utilize seu e-mail institucional e a senha cadastrada no sistema.</Text>
             </View>
           </View>
         </ScrollView>
