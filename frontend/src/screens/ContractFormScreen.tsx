@@ -41,12 +41,12 @@ function ContractForm({ contract }: { contract?: Contract }) {
       const savedId = await save(draft, contract?.id);
       router.replace(`/contracts/${savedId}`);
     } catch (error) {
-  setFormError(
-    error instanceof Error
-      ? error.message
-      : 'Não foi possível salvar o contrato.'
-  );
-}
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível salvar o contrato.'
+      );
+    }
   }
   const column = [s.flex, mobile && s.fullWidth];
   const dateColumn = [column, width <= 1050 && !mobile && { flexBasis: '45%' as const, flexGrow: 0, flexShrink: 0 }];
