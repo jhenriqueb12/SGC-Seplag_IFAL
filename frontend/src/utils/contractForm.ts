@@ -82,7 +82,7 @@ export function validateDraft(
   if (!end) {
     errors.endsAt = 'Informe uma data válida no formato DD/MM/AAAA.';
   } else if (start && end <= start) {
-    errors.endsAt = 'O encerramento deve ser posterior à data de início.';
+    errors.endsAt = 'O encerramento deve ser posterior ao início.';
   }
 
   if (parseAmount(draft.amount) === null) {
