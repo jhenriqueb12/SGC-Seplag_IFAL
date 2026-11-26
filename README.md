@@ -5,6 +5,7 @@ Sistema web para centralizar o cadastro, a consulta e o acompanhamento de contra
 ## Objetivo do MVP
 
 Entregar uma versão simples e executável, priorizando:
+
 - Autenticação básica de usuários.
 - Cadastro, edição, listagem e consulta de contratos.
 - Busca e filtros.
@@ -39,11 +40,13 @@ docs/           Decisões e documentação do projeto
 
 ### 1. Banco de dados
 
-Crie um banco PostgreSQL e execute:
+Na raiz do projeto, execute:
 
 ```bash
-psql -U postgres -d sgc_seplag -f database/schema.sql
+docker compose up -d
 ```
+
+O PostgreSQL será iniciado em localhost:5432, com o banco sgc_seplag. Na primeira inicialização, o script database/schema.sql será executado automaticamente.
 
 ### 2. Backend
 
