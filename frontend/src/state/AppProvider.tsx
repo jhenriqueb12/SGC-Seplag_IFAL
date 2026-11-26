@@ -21,10 +21,12 @@ import type {
 } from '../types/contract';
 import { parseDate } from '../utils/contractForm';
 import { parseAmount } from '../utils/contracts';
+import { getUsers, type ResponsibleUser } from '../services/users';
 
 type AppState = {
   session: Session | null;
   contracts: Contract[];
+  users: ResponsibleUser[];
   audit: AuditRecord[];
   toast: string;
   loading: boolean;
@@ -49,13 +51,13 @@ const AppContext = createContext<AppState | null>(null);
 
 function getInitials(name: string) {
   return (
-    name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0] ?? '')
-      .join('')
-      .toUpperCase() || 'US'
+      name
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((part) => part[0] ?? '')
+          .join('')
+          .toUpperCase() || 'US'
   );
 }
 
@@ -69,13 +71,13 @@ function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
     initials: getInitials(name),
     name,
     action:
-      field.toLowerCase() === 'cadastro'
-        ? 'criou este contrato'
-        : `alterou ${field.toLowerCase()}`,
+        field.toLowerCase() === 'cadastro'
+            ? 'criou este contrato'
+            : `alterou ${field.toLowerCase()}`,
     detail:
-      field.toLowerCase() === 'cadastro'
-        ? 'Registro inicial incluído no sistema.'
-        : `${field} atualizado.`,
+        field.toLowerCase() === 'cadastro'
+            ? 'Registro inicial incluído no sistema.'
+            : `${field} atualizado.`,
     field,
     previousValue: record.previousValue ?? 'Não existente',
     currentValue: record.currentValue ?? '—',
@@ -88,6 +90,7 @@ function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [users, setUsers] = useState<ResponsibleUser[]>([]);
   const [audit, setAudit] = useState<AuditRecord[]>([]);
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(false);
@@ -100,39 +103,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   async function refreshContracts() {
-    const contractsData = await getContracts();
+    const [contractsData, usersData] = await Promise.all([getContracts(), getUsers()]);
+    setUsers(usersData);
 
     // O backend disponibiliza o histórico por contrato, não em /api/audit.
     const histories = await Promise.all(
-      contractsData.map((contract) =>
-        getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>
-      )
+        contractsData.map((contract) =>
+            getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>
+        )
     );
 
     const auditRecords = histories
-      .flat()
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      )
-      .map(mapHistoryRecord);
+        .flat()
+        .sort(
+            (a, b) =>
+                new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )
+        .map(mapHistoryRecord);
 
     setContracts(contractsData);
     setAudit(auditRecords);
   }
 
   async function login(
-    email: string,
-    password: string,
-    sector: string
+      email: string,
+      password: string,
+      sector: string
   ): Promise<void> {
     setLoading(true);
 
     try {
       const { session: authenticatedSession } = await loginRequest(
-        email.trim(),
-        password,
-        sector
+          email.trim(),
+          password,
+          sector
       );
 
       setSession(authenticatedSession);
@@ -142,6 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logoutRequest();
       setSession(null);
       setContracts([]);
+      setUsers([]);
       setAudit([]);
       throw error;
     } finally {
@@ -153,6 +158,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     logoutRequest();
     setSession(null);
     setContracts([]);
+    setUsers([]);
     setAudit([]);
     setToast('');
   }
@@ -167,6 +173,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       endsAt: parseDate(draft.endsAt),
       amount: parseAmount(draft.amount),
       unit: draft.unit,
+      managerId: draft.managerId,
+      inspectorId: draft.inspectorId,
     };
 
     if (!payload.startsAt || !payload.endsAt) {
@@ -181,15 +189,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       const saved = id
-        ? await updateContract(id, payload)
-        : await createContract(payload);
+          ? await updateContract(id, payload)
+          : await createContract(payload);
 
       await refreshContracts();
 
       setToast(
-        id
-          ? 'Contrato atualizado com sucesso'
-          : 'Contrato cadastrado com sucesso'
+          id
+              ? 'Contrato atualizado com sucesso'
+              : 'Contrato cadastrado com sucesso'
       );
 
       return saved.id;
@@ -202,21 +210,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AppContext.Provider
-      value={{
-        session,
-        contracts,
-        audit,
-        toast,
-        loading,
-        login,
-        logout,
-        save,
-        refreshContracts,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+      <AppContext.Provider
+          value={{
+            session,
+            contracts,
+            users,
+            audit,
+            toast,
+            loading,
+            login,
+            logout,
+            save,
+            refreshContracts,
+          }}
+      >
+        {children}
+      </AppContext.Provider>
   );
 }
 

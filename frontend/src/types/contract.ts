@@ -2,7 +2,7 @@ export type ContractStatus = 'Vigente' | 'A renovar' | 'Vencido' | 'Encerrado' |
 export type Contract = {
   id: string; title: string; process: string; status: ContractStatus; modality: string;
   daysRemaining: number; description: string; startsAt: string; endsAt: string;
-  amount: number; unit: string; updatedAt?: string;
+  amount: number; unit: string; managerId?: string; managerName?: string; managerEmail?: string; inspectorId?: string; inspectorName?: string; inspectorEmail?: string; updatedAt?: string;
 };
 export type AuditRecord = {
   id: string; contractId: string; initials: string; name: string; action: string;
@@ -13,5 +13,5 @@ export type HistoryEntry = { id: string; contractId: string; title: string; time
 export type Session = { email: string; sector: string };
 export type ContractDraft = {
   title: string; process: string; modality: string; status: string; description: string;
-  startsAt: string; endsAt: string; amount: string; unit: string;
+  startsAt: string; endsAt: string; amount: string; unit: string; managerId: string; inspectorId: string;
 };

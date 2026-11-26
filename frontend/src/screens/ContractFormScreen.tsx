@@ -27,7 +27,7 @@ function Section({ number, title, subtitle, children }: { number: string; title:
 function ContractForm({ contract }: { contract?: Contract }) {
   const { width } = useWindowDimensions();
   const mobile = width <= 760;
-  const { contracts, save } = useApp();
+  const { contracts, users, save } = useApp();
   const [draft, setDraft] = useState(() => toDraft(contract));
   const [errors, setErrors] = useState<Partial<Record<keyof ContractDraft, string>>>({});
   const [formError, setFormError] = useState('');
@@ -42,12 +42,15 @@ function ContractForm({ contract }: { contract?: Contract }) {
       router.replace(`/contracts/${savedId}`);
     } catch (error) {
       setFormError(
-        error instanceof Error
-          ? error.message
-          : 'Não foi possível salvar o contrato.'
+          error instanceof Error
+              ? error.message
+              : 'Não foi possível salvar o contrato.'
       );
     }
   }
+  const responsibleOptions = users.map(user => `${user.name} — ${user.email}`);
+  const selectedManager = users.find(user => user.id === draft.managerId);
+  const selectedInspector = users.find(user => user.id === draft.inspectorId);
   const column = [s.flex, mobile && s.fullWidth];
   const dateColumn = [column, width <= 1050 && !mobile && { flexBasis: '45%' as const, flexGrow: 0, flexShrink: 0 }];
   return <>
@@ -70,6 +73,13 @@ function ContractForm({ contract }: { contract?: Contract }) {
         <FormField label="Valor global (R$)" value={draft.amount} onChangeText={value => set('amount', value)} error={errors.amount} placeholder="0,00" containerStyle={dateColumn} keyboardType="decimal-pad" maxLength={18} />
       </View>
       <SelectField label="Unidade responsável" value={draft.unit} onChange={value => set('unit', value)} options={units} placeholder="Selecione a unidade" error={errors.unit} containerStyle={width > 1050 ? { width: '66%' } : undefined} />
+    </Section>
+    <Section number="03" title="Responsáveis pelo contrato" subtitle="Selecione usuários ativos que receberão os alertas de vencimento por e-mail.">
+      <View style={[s.row, mobile && s.column]}>
+        <SelectField label="Gestor do contrato" value={selectedManager ? `${selectedManager.name} — ${selectedManager.email}` : ''} onChange={value => set('managerId', users.find(user => `${user.name} — ${user.email}` === value)?.id ?? '')} options={responsibleOptions} placeholder="Selecione o gestor" error={errors.managerId} containerStyle={column} />
+        <SelectField label="Fiscal do contrato" value={selectedInspector ? `${selectedInspector.name} — ${selectedInspector.email}` : ''} onChange={value => set('inspectorId', users.find(user => `${user.name} — ${user.email}` === value)?.id ?? '')} options={responsibleOptions} placeholder="Selecione o fiscal" error={errors.inspectorId} containerStyle={column} />
+      </View>
+      {!users.length && <Text style={s.error}>Nenhum usuário ativo disponível. Cadastre ou ative usuários antes de atribuir os responsáveis.</Text>}
     </Section>
     {!!formError && <Text accessibilityRole="alert" style={s.error}>{formError}</Text>}
     <View style={[s.actions, mobile && s.mobileActions]}><Button label="Cancelar" onPress={back} variant="ghost" /><Button label={contract ? 'Atualizar contrato' : 'Cadastrar contrato'} icon={contract ? undefined : 'plus'} onPress={submit} /></View>

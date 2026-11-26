@@ -4,13 +4,15 @@ import { formatCurrency, formatDate, parseAmount } from './contracts.ts';
 
 export function toDraft(contract?: Contract): ContractDraft {
   return contract
-    ? {
+      ? {
         ...contract,
         startsAt: formatDate(contract.startsAt),
         endsAt: formatDate(contract.endsAt),
         amount: contract.amount.toFixed(2).replace('.', ','),
+        managerId: contract.managerId ?? '',
+        inspectorId: contract.inspectorId ?? '',
       }
-    : {
+      : {
         title: '',
         process: '',
         modality: '',
@@ -20,6 +22,8 @@ export function toDraft(contract?: Contract): ContractDraft {
         endsAt: '',
         amount: '',
         unit: '',
+        managerId: '',
+        inspectorId: '',
       };
 }
 
@@ -32,10 +36,10 @@ export function parseDate(input: string): string | null {
   const date = new Date(`${year}-${month}-${day}T12:00:00Z`);
 
   if (
-    Number(year) < 1900 ||
-    !Number.isFinite(date.getTime()) ||
-    date.getUTCDate() !== Number(day) ||
-    date.getUTCMonth() + 1 !== Number(month)
+      Number(year) < 1900 ||
+      !Number.isFinite(date.getTime()) ||
+      date.getUTCDate() !== Number(day) ||
+      date.getUTCMonth() + 1 !== Number(month)
   ) {
     return null;
   }
@@ -44,9 +48,9 @@ export function parseDate(input: string): string | null {
 }
 
 export function validateDraft(
-  draft: ContractDraft,
-  contracts: Contract[],
-  id?: string
+    draft: ContractDraft,
+    contracts: Contract[],
+    id?: string
 ) {
   const errors: Partial<Record<keyof ContractDraft, string>> = {};
 
@@ -56,6 +60,8 @@ export function validateDraft(
     'modality',
     'status',
     'unit',
+    'managerId',
+    'inspectorId',
   ] as const) {
     if (!draft[field].trim()) {
       errors[field] = 'Preencha este campo.';
@@ -65,9 +71,9 @@ export function validateDraft(
   if (!/^\d{5}\.\d{6}\/\d{4}-\d{2}$/.test(draft.process.trim())) {
     errors.process = 'Use o formato 00000.000000/0000-00.';
   } else if (
-    contracts.some(
-      (c) => c.id !== id && c.process === draft.process.trim()
-    )
+      contracts.some(
+          (c) => c.id !== id && c.process === draft.process.trim()
+      )
   ) {
     errors.process = 'Já existe um contrato com este processo.';
   }
@@ -93,21 +99,21 @@ export function validateDraft(
 }
 
 export function buildContract(
-  draft: ContractDraft,
-  id: string,
-  now: Date,
-  previous?: Contract
+    draft: ContractDraft,
+    id: string,
+    now: Date,
+    previous?: Contract
 ): Contract {
   const endsAt = parseDate(draft.endsAt)!;
 
   const today = Date.UTC(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
   );
 
   const days = Math.round(
-    (Date.parse(`${endsAt}T00:00:00Z`) - today) / 86400000
+      (Date.parse(`${endsAt}T00:00:00Z`) - today) / 86400000
   );
 
   return {
@@ -121,14 +127,16 @@ export function buildContract(
     endsAt,
     amount: parseAmount(draft.amount)!,
     unit: draft.unit,
+    managerId: draft.managerId,
+    inspectorId: draft.inspectorId,
     daysRemaining:
-      previous &&
-      previous.endsAt === endsAt &&
-      previous.status === draft.status
-        ? previous.daysRemaining
-        : draft.status === 'Encerrado'
-          ? 0
-          : days,
+        previous &&
+        previous.endsAt === endsAt &&
+        previous.status === draft.status
+            ? previous.daysRemaining
+            : draft.status === 'Encerrado'
+                ? 0
+                : days,
     updatedAt: now.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -146,12 +154,14 @@ const fieldLabels = {
   endsAt: 'Data de encerramento',
   amount: 'Valor global',
   unit: 'Unidade responsável',
+  managerId: 'Gestor do contrato',
+  inspectorId: 'Fiscal do contrato',
 } as const;
 
 export function buildAudit(
-  before: Contract | undefined,
-  after: Contract,
-  now: Date
+    before: Contract | undefined,
+    after: Contract,
+    now: Date
 ): AuditRecord[] {
   const common = {
     contractId: after.id,
@@ -178,31 +188,31 @@ export function buildAudit(
   }
 
   return (Object.keys(fieldLabels) as (keyof typeof fieldLabels)[])
-    .filter((key) => before[key] !== after[key])
-    .map((key) => {
-      const display = (contract: Contract) =>
-        key === 'amount'
-          ? formatCurrency(contract.amount)
-          : key === 'startsAt' || key === 'endsAt'
-            ? formatDate(contract[key])
-            : String(contract[key]);
+      .filter((key) => before[key] !== after[key])
+      .map((key) => {
+        const display = (contract: Contract) =>
+            key === 'amount'
+                ? formatCurrency(contract.amount)
+                : key === 'startsAt' || key === 'endsAt'
+                    ? formatDate(contract[key])
+                    : String(contract[key]);
 
-      return {
-        ...common,
-        id: `${now.getTime()}-${after.id}-${key}`,
-        action: `alterou ${fieldLabels[key].toLowerCase()}`,
-        detail: `${fieldLabels[key]} atualizado.`,
-        field: fieldLabels[key],
-        previousValue: display(before),
-        currentValue: display(after),
-      };
-    });
+        return {
+          ...common,
+          id: `${now.getTime()}-${after.id}-${key}`,
+          action: `alterou ${fieldLabels[key].toLowerCase()}`,
+          detail: `${fieldLabels[key]} atualizado.`,
+          field: fieldLabels[key],
+          previousValue: display(before),
+          currentValue: display(after),
+        };
+      });
 }
 
 export function validateLogin(
-  email: string,
-  password: string,
-  sector: string
+    email: string,
+    password: string,
+    sector: string
 ): string {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return 'Informe um e-mail válido.';

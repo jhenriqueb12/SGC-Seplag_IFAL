@@ -46,6 +46,8 @@ export function ContractDetailsScreen() {
       <Card icon="calendar" label="Data de encerramento" style={cell}><Text style={s.value}>{formatDate(contract.endsAt)}</Text></Card>
       <Card label="Valor global" style={cell}><Text style={s.amount}>{formatCurrency(contract.amount)}</Text></Card>
       <Card label="Unidade responsável" style={[cell, columns > 1 && { flexGrow: 0 }]}><Text style={s.value}>{contract.unit}</Text></Card>
+      <Card label="Gestor do contrato" style={cell}><Text style={s.value}>{contract.managerName || 'Não informado'}</Text><Text style={s.subtitle}>{contract.managerEmail || ''}</Text></Card>
+      <Card label="Fiscal do contrato" style={cell}><Text style={s.value}>{contract.inspectorName || 'Não informado'}</Text><Text style={s.subtitle}>{contract.inspectorEmail || ''}</Text></Card>
     </View>
     <View style={[s.actions, width <= 760 && s.mobileActions]}>
       <Button label="Ver histórico de alterações" icon="history" variant="ghost" onPress={() => setHistory(true)} />
