@@ -25,6 +25,8 @@ export async function loginRequest(
   setAccessToken(response.token);
 
   const session: Session = {
+    name: response.user.name,
+    role: response.user.role,
     email: response.user.email,
     sector: response.user.sector,
   };

@@ -3,6 +3,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { AppText as Text } from '../components/AppText';
 import { Button } from '../components/Button';
+import { DateField } from '../components/DateField';
 import { FormField, SelectField } from '../components/FormField';
 import { contractStatuses, modalities, units } from '../data/contracts';
 import { useApp } from '../state/AppProvider';
@@ -65,8 +66,8 @@ function ContractForm({ contract }: { contract?: Contract }) {
     </Section>
     <Section number="02" title="Vigência e valores" subtitle="Período contratual, valor global e unidade responsável.">
       <View style={[s.row, width <= 1050 && s.wrap, mobile && s.column]}>
-        <FormField label="Data de início" value={draft.startsAt} onChangeText={value => set('startsAt', value)} error={errors.startsAt} placeholder="DD/MM/AAAA" maxLength={10} trailingIcon="calendar" containerStyle={dateColumn} keyboardType="numbers-and-punctuation" />
-        <FormField label="Data de encerramento" value={draft.endsAt} onChangeText={value => set('endsAt', value)} error={errors.endsAt} placeholder="DD/MM/AAAA" maxLength={10} trailingIcon="calendar" containerStyle={dateColumn} keyboardType="numbers-and-punctuation" />
+        <DateField label="Data de início" value={draft.startsAt} onChange={value => set('startsAt', value)} error={errors.startsAt} containerStyle={dateColumn} />
+        <DateField label="Data de encerramento" value={draft.endsAt} onChange={value => set('endsAt', value)} error={errors.endsAt} containerStyle={dateColumn} />
         <FormField label="Valor global (R$)" value={draft.amount} onChangeText={value => set('amount', value)} error={errors.amount} placeholder="0,00" containerStyle={dateColumn} keyboardType="decimal-pad" maxLength={18} />
       </View>
       <SelectField label="Unidade responsável" value={draft.unit} onChange={value => set('unit', value)} options={units} placeholder="Selecione a unidade" error={errors.unit} containerStyle={width > 1050 ? { width: '66%' } : undefined} />
