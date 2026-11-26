@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { pool } from "../config/database.js";
 import { authenticateToken } from "../middleware/auth.js";
@@ -58,9 +57,9 @@ function validateContract(data) {
 
   for (const field of required) {
     if (
-        data[field] === undefined ||
-        data[field] === null ||
-        data[field] === ""
+      data[field] === undefined ||
+      data[field] === null ||
+      data[field] === ""
     ) {
       return `O campo ${field} é obrigatório.`;
     }
@@ -71,9 +70,9 @@ function validateContract(data) {
   }
 
   if (
-      !/^\d{4}-\d{2}-\d{2}$/.test(data.startsAt) ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(data.endsAt) ||
-      data.endsAt <= data.startsAt
+    !/^\d{4}-\d{2}-\d{2}$/.test(data.startsAt) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(data.endsAt) ||
+    data.endsAt <= data.startsAt
   ) {
     return "A data final deve ser posterior à data inicial.";
   }
@@ -83,19 +82,16 @@ function validateContract(data) {
 
 async function validateResponsibleUsers(client, managerId, inspectorId) {
   const result = await client.query(
-      `SELECT id
+    `SELECT id
      FROM users
      WHERE active = TRUE
        AND id IN ($1, $2)`,
-      [managerId, inspectorId],
+    [managerId, inspectorId],
   );
 
   const validIds = new Set(result.rows.map((row) => String(row.id)));
 
-  return (
-      validIds.has(String(managerId)) &&
-      validIds.has(String(inspectorId))
-  );
+  return validIds.has(String(managerId)) && validIds.has(String(inspectorId));
 }
 
 const selectContract = `
@@ -125,7 +121,7 @@ const selectContract = `
 router.get("/", async (_req, res, next) => {
   try {
     const result = await pool.query(
-        `${selectContract} ORDER BY c.end_date ASC`,
+      `${selectContract} ORDER BY c.end_date ASC`,
     );
 
     res.json(result.rows.map(mapContract));
@@ -136,10 +132,9 @@ router.get("/", async (_req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const result = await pool.query(
-        `${selectContract} WHERE c.id = $1`,
-        [req.params.id],
-    );
+    const result = await pool.query(`${selectContract} WHERE c.id = $1`, [
+      req.params.id,
+    ]);
 
     if (!result.rowCount) {
       return res.status(404).json({ error: "Contrato não encontrado." });
@@ -166,20 +161,21 @@ router.post("/", async (req, res, next) => {
     const data = req.body;
 
     const validUsers = await validateResponsibleUsers(
-        client,
-        data.managerId,
-        data.inspectorId,
+      client,
+      data.managerId,
+      data.inspectorId,
     );
 
     if (!validUsers) {
       await client.query("ROLLBACK");
       return res.status(400).json({
-        error: "O gestor e o fiscal devem ser usuários ativos cadastrados no sistema.",
+        error:
+          "O gestor e o fiscal devem ser usuários ativos cadastrados no sistema.",
       });
     }
 
     const result = await client.query(
-        `INSERT INTO contracts (
+      `INSERT INTO contracts (
         company_name,
         process_number,
         procurement_type,
@@ -199,33 +195,33 @@ router.post("/", async (req, res, next) => {
         $8, $9, $10, $11, $11
       )
       RETURNING *`,
-        [
-          data.title.trim(),
-          data.process.trim(),
-          data.modality,
-          data.description.trim(),
-          data.startsAt,
-          data.endsAt,
-          data.amount,
-          data.unit,
-          data.managerId,
-          data.inspectorId,
-          req.user.sub,
-        ],
+      [
+        data.title.trim(),
+        data.process.trim(),
+        data.modality,
+        data.description.trim(),
+        data.startsAt,
+        data.endsAt,
+        data.amount,
+        data.unit,
+        data.managerId,
+        data.inspectorId,
+        req.user.sub,
+      ],
     );
 
     const contract = result.rows[0];
 
     await client.query(
-        `INSERT INTO contract_audit_log
+      `INSERT INTO contract_audit_log
            (contract_id, user_id, field_name, old_value, new_value)
          VALUES ($1, $2, 'Cadastro', NULL, $3)`,
-        [contract.id, req.user.sub, contract.process_number],
+      [contract.id, req.user.sub, contract.process_number],
     );
 
     const completeResult = await client.query(
-        `${selectContract} WHERE c.id = $1`,
-        [contract.id],
+      `${selectContract} WHERE c.id = $1`,
+      [contract.id],
     );
 
     await client.query("COMMIT");
@@ -259,11 +255,11 @@ router.put("/:id", async (req, res, next) => {
     await client.query("BEGIN");
 
     const previousResult = await client.query(
-        `SELECT *
+      `SELECT *
        FROM contracts
        WHERE id = $1
        FOR UPDATE`,
-        [req.params.id],
+      [req.params.id],
     );
 
     if (!previousResult.rowCount) {
@@ -275,15 +271,16 @@ router.put("/:id", async (req, res, next) => {
     const data = req.body;
 
     const validUsers = await validateResponsibleUsers(
-        client,
-        data.managerId,
-        data.inspectorId,
+      client,
+      data.managerId,
+      data.inspectorId,
     );
 
     if (!validUsers) {
       await client.query("ROLLBACK");
       return res.status(400).json({
-        error: "O gestor e o fiscal devem ser usuários ativos cadastrados no sistema.",
+        error:
+          "O gestor e o fiscal devem ser usuários ativos cadastrados no sistema.",
       });
     }
 
@@ -303,7 +300,7 @@ router.put("/:id", async (req, res, next) => {
     ];
 
     const result = await client.query(
-        `UPDATE contracts SET
+      `UPDATE contracts SET
         company_name = $1,
         process_number = $2,
         procurement_type = $3,
@@ -318,7 +315,7 @@ router.put("/:id", async (req, res, next) => {
         updated_at = NOW()
       WHERE id = $12
       RETURNING *`,
-        values,
+      values,
     );
 
     const updated = result.rows[0];
@@ -331,7 +328,11 @@ router.put("/:id", async (req, res, next) => {
       ["Data de início", old.start_date, updated.start_date],
       ["Data de encerramento", old.end_date, updated.end_date],
       ["Valor global", old.global_value, updated.global_value],
-      ["Unidade responsável", old.organizational_unit, updated.organizational_unit],
+      [
+        "Unidade responsável",
+        old.organizational_unit,
+        updated.organizational_unit,
+      ],
       ["Gestor do contrato", old.manager_id, updated.manager_id],
       ["Fiscal do contrato", old.inspector_id, updated.inspector_id],
     ];
@@ -339,23 +340,17 @@ router.put("/:id", async (req, res, next) => {
     for (const [field, before, after] of auditFields) {
       if (String(before) !== String(after)) {
         await client.query(
-            `INSERT INTO contract_audit_log
+          `INSERT INTO contract_audit_log
                (contract_id, user_id, field_name, old_value, new_value)
              VALUES ($1, $2, $3, $4, $5)`,
-            [
-              updated.id,
-              req.user.sub,
-              field,
-              String(before),
-              String(after),
-            ],
+          [updated.id, req.user.sub, field, String(before), String(after)],
         );
       }
     }
 
     const completeResult = await client.query(
-        `${selectContract} WHERE c.id = $1`,
-        [updated.id],
+      `${selectContract} WHERE c.id = $1`,
+      [updated.id],
     );
 
     await client.query("COMMIT");
@@ -379,7 +374,7 @@ router.put("/:id", async (req, res, next) => {
 router.get("/:id/history", async (req, res, next) => {
   try {
     const result = await pool.query(
-        `SELECT
+      `SELECT
            a.id,
            a.contract_id,
            a.changed_at,
@@ -392,20 +387,20 @@ router.get("/:id/history", async (req, res, next) => {
                 LEFT JOIN users u ON u.id = a.user_id
          WHERE a.contract_id = $1
          ORDER BY a.changed_at DESC`,
-        [req.params.id],
+      [req.params.id],
     );
 
     res.json(
-        result.rows.map((row) => ({
-          id: String(row.id),
-          contractId: String(row.contract_id),
-          timestamp: row.changed_at,
-          field: row.field_name,
-          previousValue: row.old_value,
-          currentValue: row.new_value,
-          name: row.name ?? "Usuário não identificado",
-          email: row.email,
-        })),
+      result.rows.map((row) => ({
+        id: String(row.id),
+        contractId: String(row.contract_id),
+        timestamp: row.changed_at,
+        field: row.field_name,
+        previousValue: row.old_value,
+        currentValue: row.new_value,
+        name: row.name ?? "Usuário não identificado",
+        email: row.email,
+      })),
     );
   } catch (error) {
     next(error);

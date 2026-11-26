@@ -7,17 +7,17 @@ router.use(authenticateToken);
 
 // Apenas usuários ativos podem ser atribuídos como gestor ou fiscal.
 router.get("/", async (_req, res, next) => {
-    try {
-        const { rows } = await pool.query(
-            `SELECT id, name, email, sector
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, name, email, sector
              FROM users
              WHERE active = TRUE
-             ORDER BY name ASC`
-        );
-        res.json(rows.map((user) => ({ ...user, id: String(user.id) })));
-    } catch (error) {
-        next(error);
-    }
+             ORDER BY name ASC`,
+    );
+    res.json(rows.map((user) => ({ ...user, id: String(user.id) })));
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

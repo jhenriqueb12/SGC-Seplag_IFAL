@@ -1,7 +1,8 @@
-import type { AuditRecord } from '../types/contract';
+import type { AuditRecord } from "../types/contract";
 export const initialAudit: AuditRecord[] = [
   {
-    id: 'seed-1', contractId: '1',
+    id: "seed-1",
+    contractId: "1",
     initials: "MR",
     name: "Mariana Ribeiro",
     action: "atualizou o valor do contrato",
@@ -14,7 +15,8 @@ export const initialAudit: AuditRecord[] = [
     tone: "blue",
   },
   {
-    id: 'seed-2', contractId: '1',
+    id: "seed-2",
+    contractId: "1",
     initials: "LC",
     name: "Lucas Costa",
     action: "alterou a data de encerramento",
@@ -27,7 +29,8 @@ export const initialAudit: AuditRecord[] = [
     tone: "indigo",
   },
   {
-    id: 'seed-3', contractId: '1',
+    id: "seed-3",
+    contractId: "1",
     initials: "AS",
     name: "Amanda Silva",
     action: "adicionou uma observação",
@@ -40,7 +43,8 @@ export const initialAudit: AuditRecord[] = [
     tone: "green",
   },
   {
-    id: 'seed-4', contractId: '1',
+    id: "seed-4",
+    contractId: "1",
     initials: "RF",
     name: "Rafael Freitas",
     action: "criou este contrato",

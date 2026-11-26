@@ -1,12 +1,12 @@
-import { apiRequest } from './api';
+import { apiRequest } from "./api";
 
 export type ResponsibleUser = {
-    id: string;
-    name: string;
-    email: string;
-    sector: string;
+  id: string;
+  name: string;
+  email: string;
+  sector: string;
 };
 
 export function getUsers() {
-    return apiRequest<ResponsibleUser[]>('/users');
+  return apiRequest<ResponsibleUser[]>("/users");
 }

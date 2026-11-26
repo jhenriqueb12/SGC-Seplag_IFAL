@@ -1,5 +1,4 @@
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
 let token: string | null = null;
 
@@ -9,7 +8,7 @@ export function setAccessToken(value: string | null) {
 
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
@@ -20,9 +19,7 @@ export async function apiRequest<T>(
     },
   });
 
-  const data = response.status === 204
-    ? null
-    : await response.json();
+  const data = response.status === 204 ? null : await response.json();
 
   if (!response.ok) {
     throw new Error(data?.error || "Erro ao comunicar com o servidor.");

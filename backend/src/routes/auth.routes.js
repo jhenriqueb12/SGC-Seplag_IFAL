@@ -20,15 +20,12 @@ router.post("/login", async (req, res, next) => {
        FROM users
        WHERE LOWER(email) = LOWER($1)
          AND active = TRUE`,
-      [email.trim()]
+      [email.trim()],
     );
 
     const user = result.rows[0];
 
-    if (
-      !user ||
-      !(await bcrypt.compare(password, user.password_hash))
-    ) {
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({
         error: "E-mail ou senha inválidos.",
       });
@@ -47,7 +44,7 @@ router.post("/login", async (req, res, next) => {
         sector: user.sector,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "8h" }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
     return res.json({
