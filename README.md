@@ -92,3 +92,11 @@ Consulte `backend/.env.example`. Nunca versione credenciais reais ou arquivos `.
 ## Status
 
 Estrutura inicial do repositório. Funcionalidades serão implementadas incrementalmente conforme o backlog do MVP.
+
+## Responsáveis e alertas por e-mail
+
+Cada contrato deve ter um gestor e um fiscal selecionados entre os usuários ativos cadastrados. O backend envia alertas para os e-mails desses responsáveis nos marcos de 5, 4 e 3 meses antes do encerramento. O agendamento padrão é diário às 8h no fuso `America/Maceio`.
+
+Para banco existente, aplique `database/migrations/002_contract_responsibles_and_notifications.sql`. Configure as variáveis SMTP em `backend/.env` e defina `NOTIFICATIONS_ENABLED=true`. Nunca versione credenciais SMTP reais.
+
+Para testar e-mails localmente, inicie o Mailpit com `docker compose --profile dev up -d`, configure SMTP em `localhost:1025` (sem autenticação) e acesse a caixa de entrada em `http://localhost:8025`.
