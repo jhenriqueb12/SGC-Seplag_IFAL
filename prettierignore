@@ -1,0 +1,16 @@
+# Dependências
+node_modules/
+**/node_modules/
+
+# Builds
+dist/
+build/
+.expo/
+coverage/
+
+# Arquivos gerados
+package-lock.json
+*.min.js
+
+# Controle de versão
+.git/

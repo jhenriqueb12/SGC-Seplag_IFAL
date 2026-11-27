@@ -17,15 +17,15 @@ function isValidDate(value) {
   }
 
   const date = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(date.getTime())
-    && date.toISOString().slice(0, 10) === value;
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
 }
 
 function validateContract(body = {}) {
   const missing = requiredFields.filter(
-    (field) => body[field] === undefined
-      || body[field] === null
-      || body[field] === "",
+    (field) =>
+      body[field] === undefined || body[field] === null || body[field] === "",
   );
 
   if (missing.length) {
@@ -91,7 +91,10 @@ export async function create(req, res, next) {
   }
 
   try {
-    const contract = await contractService.createContract(req.body, req.user?.id);
+    const contract = await contractService.createContract(
+      req.body,
+      req.user?.id,
+    );
     return res.status(201).json(contract);
   } catch (error) {
     return handleDatabaseError(error, res) ?? next(error);

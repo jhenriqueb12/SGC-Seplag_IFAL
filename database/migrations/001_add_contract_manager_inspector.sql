@@ -1,0 +1,3 @@
+ALTER TABLE contracts
+    ADD COLUMN IF NOT EXISTS manager_id BIGINT REFERENCES users(id),
+    ADD COLUMN IF NOT EXISTS inspector_id BIGINT REFERENCES users(id);

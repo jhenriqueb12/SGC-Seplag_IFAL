@@ -4,27 +4,29 @@ import {
   useEffect,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-import { loginRequest, logoutRequest } from '../services/auth';
+import { loginRequest, logoutRequest } from "../services/auth";
 import {
   createContract,
   getContractHistory,
   getContracts,
   updateContract,
-} from '../services/contracts';
+} from "../services/contracts";
 import type {
   AuditRecord,
   Contract,
   ContractDraft,
   Session,
-} from '../types/contract';
-import { parseDate } from '../utils/contractForm';
-import { parseAmount } from '../utils/contracts';
+} from "../types/contract";
+import { parseDate } from "../utils/contractForm";
+import { parseAmount } from "../utils/contracts";
+import { getUsers, type ResponsibleUser } from "../services/users";
 
 type AppState = {
   session: Session | null;
   contracts: Contract[];
+  users: ResponsibleUser[];
   audit: AuditRecord[];
   toast: string;
   loading: boolean;
@@ -53,15 +55,15 @@ function getInitials(name: string) {
       .trim()
       .split(/\s+/)
       .slice(0, 2)
-      .map((part) => part[0] ?? '')
-      .join('')
-      .toUpperCase() || 'US'
+      .map((part) => part[0] ?? "")
+      .join("")
+      .toUpperCase() || "US"
   );
 }
 
 function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
-  const name = record.name || 'Usuário não identificado';
-  const field = record.field || 'Informação do contrato';
+  const name = record.name || "Usuário não identificado";
+  const field = record.field || "Informação do contrato";
 
   return {
     id: record.id,
@@ -69,51 +71,57 @@ function mapHistoryRecord(record: ContractHistoryResponse): AuditRecord {
     initials: getInitials(name),
     name,
     action:
-      field.toLowerCase() === 'cadastro'
-        ? 'criou este contrato'
+      field.toLowerCase() === "cadastro"
+        ? "criou este contrato"
         : `alterou ${field.toLowerCase()}`,
     detail:
-      field.toLowerCase() === 'cadastro'
-        ? 'Registro inicial incluído no sistema.'
+      field.toLowerCase() === "cadastro"
+        ? "Registro inicial incluído no sistema."
         : `${field} atualizado.`,
     field,
-    previousValue: record.previousValue ?? 'Não existente',
-    currentValue: record.currentValue ?? '—',
-    source: 'Registro do banco de dados',
-    date: new Date(record.timestamp).toLocaleString('pt-BR'),
-    tone: field.toLowerCase() === 'cadastro' ? 'gray' : 'blue',
+    previousValue: record.previousValue ?? "Não existente",
+    currentValue: record.currentValue ?? "—",
+    source: "Registro do banco de dados",
+    date: new Date(record.timestamp).toLocaleString("pt-BR"),
+    tone: field.toLowerCase() === "cadastro" ? "gray" : "blue",
   };
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [users, setUsers] = useState<ResponsibleUser[]>([]);
   const [audit, setAudit] = useState<AuditRecord[]>([]);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!toast) return;
 
-    const timer = setTimeout(() => setToast(''), 3500);
+    const timer = setTimeout(() => setToast(""), 3500);
     return () => clearTimeout(timer);
   }, [toast]);
 
   async function refreshContracts() {
-    const contractsData = await getContracts();
+    const [contractsData, usersData] = await Promise.all([
+      getContracts(),
+      getUsers(),
+    ]);
+    setUsers(usersData);
 
     // O backend disponibiliza o histórico por contrato, não em /api/audit.
     const histories = await Promise.all(
-      contractsData.map((contract) =>
-        getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>
-      )
+      contractsData.map(
+        (contract) =>
+          getContractHistory(contract.id) as Promise<ContractHistoryResponse[]>,
+      ),
     );
 
     const auditRecords = histories
       .flat()
       .sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       )
       .map(mapHistoryRecord);
 
@@ -124,7 +132,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   async function login(
     email: string,
     password: string,
-    sector: string
+    sector: string,
   ): Promise<void> {
     setLoading(true);
 
@@ -132,16 +140,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { session: authenticatedSession } = await loginRequest(
         email.trim(),
         password,
-        sector
+        sector,
       );
 
       setSession(authenticatedSession);
       await refreshContracts();
-      setToast('Login realizado com sucesso');
+      setToast("Login realizado com sucesso");
     } catch (error) {
       logoutRequest();
       setSession(null);
       setContracts([]);
+      setUsers([]);
       setAudit([]);
       throw error;
     } finally {
@@ -153,8 +162,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     logoutRequest();
     setSession(null);
     setContracts([]);
+    setUsers([]);
     setAudit([]);
-    setToast('');
+    setToast("");
   }
 
   async function save(draft: ContractDraft, id?: string): Promise<string> {
@@ -167,14 +177,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       endsAt: parseDate(draft.endsAt),
       amount: parseAmount(draft.amount),
       unit: draft.unit,
+      managerId: draft.managerId,
+      inspectorId: draft.inspectorId,
     };
 
     if (!payload.startsAt || !payload.endsAt) {
-      throw new Error('Informe datas válidas para o contrato.');
+      throw new Error("Informe datas válidas para o contrato.");
     }
 
     if (payload.amount === null) {
-      throw new Error('Informe um valor válido para o contrato.');
+      throw new Error("Informe um valor válido para o contrato.");
     }
 
     setLoading(true);
@@ -188,13 +200,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setToast(
         id
-          ? 'Contrato atualizado com sucesso'
-          : 'Contrato cadastrado com sucesso'
+          ? "Contrato atualizado com sucesso"
+          : "Contrato cadastrado com sucesso",
       );
 
       return saved.id;
     } catch (error) {
-      setToast('Não foi possível salvar o contrato');
+      setToast("Não foi possível salvar o contrato");
       throw error;
     } finally {
       setLoading(false);
@@ -206,6 +218,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         session,
         contracts,
+        users,
         audit,
         toast,
         loading,
@@ -224,7 +237,7 @@ export function useApp() {
   const state = useContext(AppContext);
 
   if (!state) {
-    throw new Error('AppProvider ausente');
+    throw new Error("AppProvider ausente");
   }
 
   return state;

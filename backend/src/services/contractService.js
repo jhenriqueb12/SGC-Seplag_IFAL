@@ -14,11 +14,9 @@ const fields = [
 export function calculateSituation(startDate, endDate, today = new Date()) {
   const start = new Date(`${startDate}T00:00:00.000Z`);
   const end = new Date(`${endDate}T00:00:00.000Z`);
-  const current = new Date(Date.UTC(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  ));
+  const current = new Date(
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()),
+  );
 
   if (current < start) return "A iniciar";
   if (current > end) return "Encerrado";
@@ -37,10 +35,7 @@ export async function listContracts() {
 }
 
 export async function getContractById(id) {
-  const { rows } = await query(
-    "SELECT * FROM contracts WHERE id = $1",
-    [id],
-  );
+  const { rows } = await query("SELECT * FROM contracts WHERE id = $1", [id]);
   return rows[0] ?? null;
 }
 
@@ -48,7 +43,12 @@ export async function createContract(payload, userId) {
   const situation = calculateSituation(payload.start_date, payload.end_date);
   const columns = [...fields, "situation", "created_by", "updated_by"];
   const placeholders = columns.map((_, index) => `$${index + 1}`);
-  const values = [...getValues(payload), situation, userId ?? null, userId ?? null];
+  const values = [
+    ...getValues(payload),
+    situation,
+    userId ?? null,
+    userId ?? null,
+  ];
 
   const { rows } = await query(
     `INSERT INTO contracts (${columns.join(", ")})
@@ -78,9 +78,6 @@ export async function updateContract(id, payload, userId) {
 }
 
 export async function deleteContract(id) {
-  const { rowCount } = await query(
-    "DELETE FROM contracts WHERE id = $1",
-    [id],
-  );
+  const { rowCount } = await query("DELETE FROM contracts WHERE id = $1", [id]);
   return rowCount > 0;
 }

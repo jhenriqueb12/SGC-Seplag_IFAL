@@ -16,19 +16,22 @@ async function verifyPassword(password, storedHash) {
   const derived = Buffer.from(await scrypt(password, salt, 64));
   const expected = Buffer.from(hash, "hex");
 
-  return derived.length === expected.length
-    && timingSafeEqual(derived, expected);
+  return (
+    derived.length === expected.length && timingSafeEqual(derived, expected)
+  );
 }
 
 function createToken(user) {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET não foi configurado.");
 
-  const payload = Buffer.from(JSON.stringify({
-    sub: user.id,
-    role: user.role,
-    exp: Math.floor(Date.now() / 1000) + (8 * 60 * 60),
-  })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: user.id,
+      role: user.role,
+      exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60,
+    }),
+  ).toString("base64url");
 
   const signature = createHmac("sha256", secret)
     .update(payload)
@@ -56,7 +59,11 @@ export async function login(req, res, next) {
     );
 
     const user = rows[0];
-    if (!user || !user.active || !(await verifyPassword(password, user.password_hash))) {
+    if (
+      !user ||
+      !user.active ||
+      !(await verifyPassword(password, user.password_hash))
+    ) {
       return res.status(401).json({ error: "E-mail ou senha inválidos." });
     }
 
