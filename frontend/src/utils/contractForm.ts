@@ -1,6 +1,10 @@
-
-import type { AuditRecord, Contract, ContractDraft, Session } from '../types/contract';
-import { formatCurrency, formatDate, parseAmount } from './contracts.ts';
+import type {
+  AuditRecord,
+  Contract,
+  ContractDraft,
+  Session,
+} from "../types/contract";
+import { formatCurrency, formatDate, parseAmount } from "./contracts.ts";
 
 export function toDraft(contract?: Contract): ContractDraft {
   return contract
@@ -8,18 +12,22 @@ export function toDraft(contract?: Contract): ContractDraft {
         ...contract,
         startsAt: formatDate(contract.startsAt),
         endsAt: formatDate(contract.endsAt),
-        amount: contract.amount.toFixed(2).replace('.', ','),
+        amount: contract.amount.toFixed(2).replace(".", ","),
+        managerId: contract.managerId ?? "",
+        inspectorId: contract.inspectorId ?? "",
       }
     : {
-        title: '',
-        process: '',
-        modality: '',
-        status: '',
-        description: '',
-        startsAt: '',
-        endsAt: '',
-        amount: '',
-        unit: '',
+        title: "",
+        process: "",
+        modality: "",
+        status: "",
+        description: "",
+        startsAt: "",
+        endsAt: "",
+        amount: "",
+        unit: "",
+        managerId: "",
+        inspectorId: "",
       };
 }
 
@@ -46,47 +54,47 @@ export function parseDate(input: string): string | null {
 export function validateDraft(
   draft: ContractDraft,
   contracts: Contract[],
-  id?: string
+  id?: string,
 ) {
   const errors: Partial<Record<keyof ContractDraft, string>> = {};
 
   for (const field of [
-    'title',
-    'description',
-    'modality',
-    'status',
-    'unit',
+    "title",
+    "description",
+    "modality",
+    "status",
+    "unit",
+    "managerId",
+    "inspectorId",
   ] as const) {
     if (!draft[field].trim()) {
-      errors[field] = 'Preencha este campo.';
+      errors[field] = "Preencha este campo.";
     }
   }
 
   if (!/^\d{5}\.\d{6}\/\d{4}-\d{2}$/.test(draft.process.trim())) {
-    errors.process = 'Use o formato 00000.000000/0000-00.';
+    errors.process = "Use o formato 00000.000000/0000-00.";
   } else if (
-    contracts.some(
-      (c) => c.id !== id && c.process === draft.process.trim()
-    )
+    contracts.some((c) => c.id !== id && c.process === draft.process.trim())
   ) {
-    errors.process = 'Já existe um contrato com este processo.';
+    errors.process = "Já existe um contrato com este processo.";
   }
 
   const start = parseDate(draft.startsAt);
   const end = parseDate(draft.endsAt);
 
   if (!start) {
-    errors.startsAt = 'Informe uma data válida no formato DD/MM/AAAA.';
+    errors.startsAt = "Informe uma data válida no formato DD/MM/AAAA.";
   }
 
   if (!end) {
-    errors.endsAt = 'Informe uma data válida no formato DD/MM/AAAA.';
+    errors.endsAt = "Informe uma data válida no formato DD/MM/AAAA.";
   } else if (start && end <= start) {
-    errors.endsAt = 'O encerramento deve ser posterior ao início.';
+    errors.endsAt = "O encerramento deve ser posterior ao início.";
   }
 
   if (parseAmount(draft.amount) === null) {
-    errors.amount = 'Informe um valor positivo, como 1284500,00.';
+    errors.amount = "Informe um valor positivo, como 1284500,00.";
   }
 
   return errors;
@@ -96,18 +104,14 @@ export function buildContract(
   draft: ContractDraft,
   id: string,
   now: Date,
-  previous?: Contract
+  previous?: Contract,
 ): Contract {
   const endsAt = parseDate(draft.endsAt)!;
 
-  const today = Date.UTC(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 
   const days = Math.round(
-    (Date.parse(`${endsAt}T00:00:00Z`) - today) / 86400000
+    (Date.parse(`${endsAt}T00:00:00Z`) - today) / 86400000,
   );
 
   return {
@@ -115,51 +119,53 @@ export function buildContract(
     title: draft.title.trim(),
     process: draft.process.trim(),
     modality: draft.modality,
-    status: draft.status as Contract['status'],
+    status: draft.status as Contract["status"],
     description: draft.description.trim(),
     startsAt: parseDate(draft.startsAt)!,
     endsAt,
     amount: parseAmount(draft.amount)!,
     unit: draft.unit,
+    managerId: draft.managerId,
+    inspectorId: draft.inspectorId,
     daysRemaining:
-      previous &&
-      previous.endsAt === endsAt &&
-      previous.status === draft.status
+      previous && previous.endsAt === endsAt && previous.status === draft.status
         ? previous.daysRemaining
-        : draft.status === 'Encerrado'
+        : draft.status === "Encerrado"
           ? 0
           : days,
-    updatedAt: now.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
+    updatedAt: now.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
     }),
   };
 }
 
 const fieldLabels = {
-  title: 'Empresa contratada',
-  process: 'Número do processo',
-  modality: 'Modalidade',
-  status: 'Situação',
-  description: 'Descrição do objeto',
-  startsAt: 'Data de início',
-  endsAt: 'Data de encerramento',
-  amount: 'Valor global',
-  unit: 'Unidade responsável',
+  title: "Empresa contratada",
+  process: "Número do processo",
+  modality: "Modalidade",
+  status: "Situação",
+  description: "Descrição do objeto",
+  startsAt: "Data de início",
+  endsAt: "Data de encerramento",
+  amount: "Valor global",
+  unit: "Unidade responsável",
+  managerId: "Gestor do contrato",
+  inspectorId: "Fiscal do contrato",
 } as const;
 
 export function buildAudit(
   before: Contract | undefined,
   after: Contract,
-  now: Date
+  now: Date,
 ): AuditRecord[] {
   const common = {
     contractId: after.id,
-    initials: 'MR',
-    name: 'Mariana Ribeiro',
-    date: now.toLocaleString('pt-BR'),
-    source: 'Atualização manual',
-    tone: 'blue' as const,
+    initials: "MR",
+    name: "Mariana Ribeiro",
+    date: now.toLocaleString("pt-BR"),
+    source: "Atualização manual",
+    tone: "blue" as const,
   };
 
   if (!before) {
@@ -167,12 +173,12 @@ export function buildAudit(
       {
         ...common,
         id: `${now.getTime()}-${after.id}-created`,
-        action: 'criou este contrato',
-        detail: 'Registro inicial incluído no sistema.',
-        field: 'Cadastro do contrato',
-        previousValue: 'Não existente',
+        action: "criou este contrato",
+        detail: "Registro inicial incluído no sistema.",
+        field: "Cadastro do contrato",
+        previousValue: "Não existente",
         currentValue: `Processo ${after.process}`,
-        tone: 'gray',
+        tone: "gray",
       },
     ];
   }
@@ -181,9 +187,9 @@ export function buildAudit(
     .filter((key) => before[key] !== after[key])
     .map((key) => {
       const display = (contract: Contract) =>
-        key === 'amount'
+        key === "amount"
           ? formatCurrency(contract.amount)
-          : key === 'startsAt' || key === 'endsAt'
+          : key === "startsAt" || key === "endsAt"
             ? formatDate(contract[key])
             : String(contract[key]);
 
@@ -202,21 +208,21 @@ export function buildAudit(
 export function validateLogin(
   email: string,
   password: string,
-  sector: string
+  sector: string,
 ): string {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    return 'Informe um e-mail válido.';
+    return "Informe um e-mail válido.";
   }
 
   if (!password.trim()) {
-    return 'Informe sua senha.';
+    return "Informe sua senha.";
   }
 
   if (!sector) {
-    return 'Selecione seu setor.';
+    return "Selecione seu setor.";
   }
 
-  return '';
+  return "";
 }
 
 export function demoSession(email: string, sector: string): Session {

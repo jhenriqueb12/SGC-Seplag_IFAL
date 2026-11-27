@@ -15,7 +15,7 @@ type LoginResponse = {
 export async function loginRequest(
   email: string,
   password: string,
-  sector: string
+  sector: string,
 ) {
   const response = await apiRequest<LoginResponse>("/auth/login", {
     method: "POST",

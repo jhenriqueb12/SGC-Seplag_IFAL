@@ -1,1 +1,1 @@
-export { ContractFormScreen as default } from '../../../../screens/ContractFormScreen';
+export { ContractFormScreen as default } from "../../../../screens/ContractFormScreen";

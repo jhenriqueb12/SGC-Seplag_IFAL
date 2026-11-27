@@ -4,19 +4,19 @@
 
 ## Fluxo de trabalho
 
-| Backlog | A Fazer | Em andamento | Em revisão | Concluído |
-|---|---|---|---|---|
+| Backlog                                | A Fazer                    | Em andamento              | Em revisão                             | Concluído                     |
+| -------------------------------------- | -------------------------- | ------------------------- | -------------------------------------- | ----------------------------- |
 | Itens priorizados, ainda não iniciados | Selecionados para a sprint | Execução pelo responsável | Revisão de código, testes ou validação | Critérios de aceite atendidos |
 
 ## Cartões por sprint
 
-| Sprint | Cartão | Situação inicial | Acesso |
-|---|---|---|---|
-| Sprint 1 | Fundação, autenticação e consulta de contratos | Backlog | [Issue #1](../issues/1) |
-| Sprint 2 | Cadastro, edição e validação de contratos | Backlog | [Issue #2](../issues/2) |
-| Sprint 3 | Histórico e auditoria de alterações | Backlog | [Issue #3](../issues/3) |
-| Sprint 4 | Situação automática e alertas de vencimento | Backlog | [Issue #4](../issues/4) |
-| Sprint 5 | Integração, testes de regressão e homologação do MVP | Backlog | [Issue #5](../issues/5) |
+| Sprint   | Cartão                                               | Situação inicial | Acesso                  |
+| -------- | ---------------------------------------------------- | ---------------- | ----------------------- |
+| Sprint 1 | Fundação, autenticação e consulta de contratos       | Backlog          | [Issue #1](../issues/1) |
+| Sprint 2 | Cadastro, edição e validação de contratos            | Backlog          | [Issue #2](../issues/2) |
+| Sprint 3 | Histórico e auditoria de alterações                  | Backlog          | [Issue #3](../issues/3) |
+| Sprint 4 | Situação automática e alertas de vencimento          | Backlog          | [Issue #4](../issues/4) |
+| Sprint 5 | Integração, testes de regressão e homologação do MVP | Backlog          | [Issue #5](../issues/5) |
 
 ## Responsáveis e pareamento
 
