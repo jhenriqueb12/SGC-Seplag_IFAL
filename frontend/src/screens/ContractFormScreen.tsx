@@ -1,15 +1,16 @@
-import { useState, type ReactNode } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { AppText as Text } from "../components/AppText";
-import { Button } from "../components/Button";
-import { FormField, SelectField } from "../components/FormField";
-import { contractStatuses, modalities, units } from "../data/contracts";
-import { useApp } from "../state/AppProvider";
-import { colors } from "../styles/theme";
-import { toDraft, validateDraft } from "../utils/contractForm";
-import type { Contract, ContractDraft } from "../types/contract";
-import { MissingContract } from "./ContractDetailsScreen";
+import { useState, type ReactNode } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { AppText as Text } from '../components/AppText';
+import { Button } from '../components/Button';
+import { DateField } from '../components/DateField';
+import { FormField, SelectField } from '../components/FormField';
+import { contractStatuses, modalities, units } from '../data/contracts';
+import { useApp } from '../state/AppProvider';
+import { colors } from '../styles/theme';
+import { toDraft, validateDraft } from '../utils/contractForm';
+import type { Contract, ContractDraft } from '../types/contract';
+import { MissingContract } from './ContractDetailsScreen';
 
 export function ContractFormScreen({
   creating = false,
