@@ -34,18 +34,8 @@ export type AuditRecord = {
   date: string;
   tone: "blue" | "indigo" | "green" | "gray";
 };
-export type HistoryEntry = {
-  id: string;
-  contractId: string;
-  title: string;
-  timestamp: string;
-};
-<<<<<<< HEAD
 export type HistoryEntry = { id: string; contractId: string; title: string; timestamp: string };
 export type Session = { name?: string; role?: string; email: string; sector: string };
-=======
-export type Session = { email: string; sector: string };
->>>>>>> origin/main
 export type ContractDraft = {
   title: string;
   process: string;

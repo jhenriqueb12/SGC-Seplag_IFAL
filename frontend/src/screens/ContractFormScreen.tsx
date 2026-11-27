@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -12,20 +11,6 @@ import { colors } from '../styles/theme';
 import { toDraft, validateDraft } from '../utils/contractForm';
 import type { Contract, ContractDraft } from '../types/contract';
 import { MissingContract } from './ContractDetailsScreen';
-=======
-import { useState, type ReactNode } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { AppText as Text } from "../components/AppText";
-import { Button } from "../components/Button";
-import { FormField, SelectField } from "../components/FormField";
-import { contractStatuses, modalities, units } from "../data/contracts";
-import { useApp } from "../state/AppProvider";
-import { colors } from "../styles/theme";
-import { toDraft, validateDraft } from "../utils/contractForm";
-import type { Contract, ContractDraft } from "../types/contract";
-import { MissingContract } from "./ContractDetailsScreen";
->>>>>>> origin/main
 
 export function ContractFormScreen({
   creating = false,
@@ -313,24 +298,8 @@ function ContractForm({ contract }: { contract?: Contract }) {
           onPress={submit}
         />
       </View>
-<<<<<<< HEAD
-      <FormField label="Descrição do objeto" value={draft.description} onChangeText={value => set('description', value)} error={errors.description} placeholder="Descreva o objeto do contrato" multiline maxLength={4000} hint="Descreva de forma clara o objeto do contrato." />
-    </Section>
-    <Section number="02" title="Vigência e valores" subtitle="Período contratual, valor global e unidade responsável.">
-      <View style={[s.row, width <= 1050 && s.wrap, mobile && s.column]}>
-        <DateField label="Data de início" value={draft.startsAt} onChange={value => set('startsAt', value)} error={errors.startsAt} containerStyle={dateColumn} />
-        <DateField label="Data de encerramento" value={draft.endsAt} onChange={value => set('endsAt', value)} error={errors.endsAt} containerStyle={dateColumn} />
-        <FormField label="Valor global (R$)" value={draft.amount} onChangeText={value => set('amount', value)} error={errors.amount} placeholder="0,00" containerStyle={dateColumn} keyboardType="decimal-pad" maxLength={18} />
-      </View>
-      <SelectField label="Unidade responsável" value={draft.unit} onChange={value => set('unit', value)} options={units} placeholder="Selecione a unidade" error={errors.unit} containerStyle={width > 1050 ? { width: '66%' } : undefined} />
-    </Section>
-    {!!formError && <Text accessibilityRole="alert" style={s.error}>{formError}</Text>}
-    <View style={[s.actions, mobile && s.mobileActions]}><Button label="Cancelar" onPress={back} variant="ghost" /><Button label={contract ? 'Atualizar contrato' : 'Cadastrar contrato'} icon={contract ? undefined : 'plus'} onPress={submit} /></View>
-  </>;
-=======
     </>
   );
->>>>>>> origin/main
 }
 const s = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
