@@ -5,6 +5,9 @@
   "description": "API do Sistema de Gestão de Contratos da SEPLAG",
   "type": "module",
   "scripts": {
+    "migrate": "node scripts/migrate.js",
+    "predev": "npm run migrate",
+    "prestart": "npm run migrate",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "create-user": "node scripts/create-user.js",
