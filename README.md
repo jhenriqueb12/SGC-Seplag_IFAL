@@ -97,6 +97,6 @@ Estrutura inicial do repositório. Funcionalidades serão implementadas incremen
 
 Cada contrato deve ter um gestor e um fiscal selecionados entre os usuários ativos cadastrados. O backend envia alertas para os e-mails desses responsáveis nos marcos de 5, 4 e 3 meses antes do encerramento. O agendamento padrão é diário às 8h no fuso `America/Maceio`.
 
-Para banco existente, aplique `database/migrations/002_contract_responsibles_and_notifications.sql`. Configure as variáveis SMTP em `backend/.env` e defina `NOTIFICATIONS_ENABLED=true`. Nunca versione credenciais SMTP reais.
+As migrações do banco são aplicadas automaticamente ao iniciar o backend (ou manualmente com `npm run migrate`; veja `database/README.md`). Configure as variáveis SMTP em `backend/.env` e defina `NOTIFICATIONS_ENABLED=true`. Nunca versione credenciais SMTP reais.
 
 Para testar e-mails localmente, inicie o Mailpit com `docker compose --profile dev up -d`, configure SMTP em `localhost:1025` (sem autenticação) e acesse a caixa de entrada em `http://localhost:8025`.
